@@ -1,29 +1,46 @@
-// Wire Master Writer
-// by Nicholas Zambetti <http://www.zambetti.com>
-
-// Demonstrates use of the Wire library
-// Writes data to an I2C/TWI slave device
-// Refer to the "Wire Slave Receiver" example for use with this
-
-// Created 29 March 2006
-
-// This example code is in the public domain.
-
-
 #include <Wire.h>
 
+
+
+int rpm = 1000;
+
+
+
 void setup() {
-  Wire.begin(); // join i2c bus (address optional for master)
+  Wire.begin();
+  Serial.begin(9600);
 }
 
-byte x = 0;
+
 
 void loop() {
-  Wire.beginTransmission(8); // transmit to device #8
-  Wire.write("x is ");        // sends five bytes
-  Wire.write(x);              // sends one byte
-  Wire.endTransmission();    // stop transmitting
-
-  x++;
+  Serial.println(rpm);
+  sendRPM(8);
+  Serial.println(rpm);
   delay(500);
+  requestRPM(8);
+  Serial.println(rpm);
+  delay(500);
+  ++rpm;
+}
+
+
+
+int requestRPM(int device){
+  Wire.requestFrom(device, 2);
+
+  byte b0 = Wire.read();
+  byte b1 = Wire.read();
+
+  rpm = b0 | (b1 << 8);
+}
+
+void sendRPM(int device){
+  byte b0 = rpm & 0xFF;
+  byte b1 = (rpm >> 8) & 0xFF;
+
+  Wire.beginTransmission(device);
+  Wire.write(b0);
+  Wire.write(b1);
+  Wire.endTransmission();
 }
